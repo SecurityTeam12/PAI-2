@@ -33,7 +33,8 @@ public class ClientSocket {
         char[] truststorePassword = "keystore".toCharArray();
 
         KeyStore trustStore = KeyStore.getInstance("JKS");
-        try (InputStream trustStoreIS = new FileInputStream("Application/src/main/resources/client_truststore.p12")) {
+        String trustStorePath = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "client_truststore.p12";
+        try (InputStream trustStoreIS = new FileInputStream(trustStorePath)) {
             trustStore.load(trustStoreIS, truststorePassword);
         }
 
