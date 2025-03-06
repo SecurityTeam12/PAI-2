@@ -1,7 +1,6 @@
 package secteam12.pai1.server;
 
 import java.io.*;
-import java.net.Socket;
 import java.security.*;
 import java.util.Base64;
 import java.util.List;
@@ -22,9 +21,6 @@ import secteam12.pai1.repository.UserRepository;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
 import secteam12.pai1.utils.MACUtil;
-
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.*;
 
 @Component

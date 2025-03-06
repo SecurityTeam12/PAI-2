@@ -122,7 +122,6 @@ public class ServerTest extends Server{
         public void testBruteForceAttack() throws Exception {
             List<String> simulatedDicctionary = List.of("password", "123456", "qwerty", "letme in", "admin", "strongpassword", "password123", "12345678", "welcome", "monkey");
             String username = "testUser";
-            String correctPassword = "Strong1@Password";
 
             List<User> users = simulateRepositoryResponse();
             when(userRepository.findAll()).thenReturn(users);

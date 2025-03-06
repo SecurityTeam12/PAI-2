@@ -8,21 +8,11 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
-import javax.swing.*;
 import java.io.*;
 import java.security.KeyStore;
 import java.util.Base64;
 import java.util.Map;
-import java.net.Socket;
-import java.util.Base64;
-import java.util.Map;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.swing.JOptionPane;
-
-
-import secteam12.pai1.utils.MACUtil;
 
 public class ClientSocket {
     private static final String HMAC_SHA512 = "HmacSHA512";
