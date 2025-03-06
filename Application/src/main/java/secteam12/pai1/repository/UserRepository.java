@@ -10,8 +10,8 @@ import javax.sql.RowSet;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
 
-    @Query("SELECT COUNT(t) FROM User u JOIN u.transactions t WHERE u.id = :id")
-    Integer findUserTransactionLenghtByUserId(Integer id);
+    @Query("SELECT COUNT(t) FROM User u JOIN u.messages t WHERE u.id = :id")
+    Integer findUserMessageLenghtByUserId(Integer id);
 
     RowSet getByid(Integer id);
 }

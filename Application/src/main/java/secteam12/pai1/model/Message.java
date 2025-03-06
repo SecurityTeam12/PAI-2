@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-public class Transaction {
+public class Message {
     @Id
     @SequenceGenerator(name = "entity_seq",
             sequenceName = "entity_sequence",
@@ -18,13 +18,7 @@ public class Transaction {
     private Long id;
 
     @Column(nullable = false)
-    private String sourceAccount;
-
-    @Column(nullable = false)
-    private String destinationAccount;
-
-    @Column(nullable = false)
-    private Double amount;
+    private String messageContent;
 
     @Column(nullable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
@@ -35,11 +29,9 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{" +
+        return "Message{" +
                 "id=" + id +
-                ", sourceAccount='" + sourceAccount + '\'' +
-                ", destinationAccount='" + destinationAccount + '\'' +
-                ", amount=" + amount +
+                ", message='" + messageContent + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }
