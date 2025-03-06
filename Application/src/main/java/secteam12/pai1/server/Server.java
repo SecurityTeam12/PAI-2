@@ -180,18 +180,15 @@ public class Server implements CommandLineRunner {
                 String receivedMAC = input.readLine();
 
                 if (MACUtil.verifyMAC(message, nonce, key, receivedMAC)) {
-                    String[] parts = message.split(",");
 
-                    if (parts.length != 3) {
+                    if (message.length() > 255) {
                         output.println("Invalid message format.");
                         continue;
                     }
                     
 
                     Message newMessage = new Message();
-                    newMessage.setSourceAccount(parts[0]);
-                    newMessage.setDestinationAccount(parts[1]);
-                    newMessage.setAmount(Double.parseDouble(parts[2]));
+                    newMessage.setMessageContent(message);
                     newMessage.setUser(user);
 
                     

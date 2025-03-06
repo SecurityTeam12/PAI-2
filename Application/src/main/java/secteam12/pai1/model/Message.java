@@ -18,13 +18,7 @@ public class Message {
     private Long id;
 
     @Column(nullable = false)
-    private String sourceAccount;
-
-    @Column(nullable = false)
-    private String destinationAccount;
-
-    @Column(nullable = false)
-    private Double amount;
+    private String messageContent;
 
     @Column(nullable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
@@ -37,9 +31,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "id=" + id +
-                ", sourceAccount='" + sourceAccount + '\'' +
-                ", destinationAccount='" + destinationAccount + '\'' +
-                ", amount=" + amount +
+                ", message='" + messageContent + '\'' +
                 ", timestamp=" + timestamp +
                 '}';
     }

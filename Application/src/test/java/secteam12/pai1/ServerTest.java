@@ -144,24 +144,19 @@ public class ServerTest extends Server{
         
             when(mockInput.readLine()).thenReturn("Message received");
 
-            String message = "sourceAccount,destinationAccount,100.0";
+            String message = "Testing message";
             String nonce = MACUtil.generateNonce();
             String encodedKey = Base64.getEncoder().encodeToString(new byte[16]);
             String receivedMAC = MACUtil.generateMAC(message, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
         
             when(mockInput.readLine()).thenReturn(message, nonce, encodedKey, receivedMAC);
         
-            String[] parts = message.split(",");
-            assertEquals(3, parts.length, "Message format should be valid");
+            assertTrue(message.length() <= 255, "Message format should be valid");
         
             Message newMessage = new Message();
-            newMessage.setSourceAccount(parts[0]);
-            newMessage.setDestinationAccount(parts[1]);
-            newMessage.setAmount(Double.parseDouble(parts[2]));
+            newMessage.setMessageContent(message);
         
-            assertEquals("sourceAccount", newMessage.getSourceAccount());
-            assertEquals("destinationAccount", newMessage.getDestinationAccount());
-            assertEquals(100.0, newMessage.getAmount());
+            assertEquals("Testing message", newMessage.getMessageContent());
         }
         
         @Test
