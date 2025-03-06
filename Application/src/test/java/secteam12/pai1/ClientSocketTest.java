@@ -17,11 +17,11 @@ import secteam12.pai1.client.ClientSocket;
 public class ClientSocketTest extends ClientSocket {
         
     @Test
-    public void testSecureTransaction() throws Exception {
+    public void testSecureMessage() throws Exception {
         String nonce = "12345";
         String data = "testData";
 
-        Map<String, String> result = secureTransaction(nonce, data);
+        Map<String, String> result = secureMessage(nonce, data);
 
         assertNotNull(result.get("EncodedKey"), "EncodedKey should not be null");
         assertNotNull(result.get("SecureMac"), "SecureMac should not be null");
@@ -43,8 +43,8 @@ public class ClientSocketTest extends ClientSocket {
 
     @Test
     public void testHMACKeyGenerationIsUnique() throws Exception {
-        Map<String, String> result1 = secureTransaction("nonce1", "data1");
-        Map<String, String> result2 = secureTransaction("nonce2", "data2");
+        Map<String, String> result1 = secureMessage("nonce1", "data1");
+        Map<String, String> result2 = secureMessage("nonce2", "data2");
 
         assertNotEquals(result1.get("EncodedKey"), result2.get("EncodedKey"), "Encoded keys should be unique");
         assertNotEquals(result1.get("SecureMac"), result2.get("SecureMac"), "Secure MACs should be unique");
@@ -64,9 +64,9 @@ public class ClientSocketTest extends ClientSocket {
         String username = "testUser";
         String password = "Strong1@Password";
 
-        Map<String, String> secureTransaction = secureTransaction("12345", username + password);
-        String encodedKey = secureTransaction.get("EncodedKey");
-        String secureMac = secureTransaction.get("SecureMac");
+        Map<String, String> secureMessage = secureMessage("12345", username + password);
+        String encodedKey = secureMessage.get("EncodedKey");
+        String secureMac = secureMessage.get("SecureMac");
 
         mockOutput.println(encodedKey);
         mockOutput.println(secureMac);
@@ -91,9 +91,9 @@ public class ClientSocketTest extends ClientSocket {
         String username = "newUser";
         String password = "NewUserPassword";
 
-        Map<String, String> secureTransaction = secureTransaction("12345", username + password);
-        String encodedKey = secureTransaction.get("EncodedKey");
-        String secureMac = secureTransaction.get("SecureMac");
+        Map<String, String> secureMessage = secureMessage("12345", username + password);
+        String encodedKey = secureMessage.get("EncodedKey");
+        String secureMac = secureMessage.get("SecureMac");
 
         mockOutput.println(encodedKey);
         mockOutput.println(secureMac);

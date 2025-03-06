@@ -79,9 +79,9 @@ public class ClientSocket {
                             break;
                         }
 
-                        Map<String,String> secureTransaction = secureTransaction(nonce, userName + password);
-                        String encodedKey = secureTransaction.get("EncodedKey");
-                        String secureMac = secureTransaction.get("SecureMac");
+                        Map<String,String> secureMessage = secureMessage(nonce, userName + password);
+                        String encodedKey = secureMessage.get("EncodedKey");
+                        String secureMac = secureMessage.get("SecureMac");
 
                         output.println(encodedKey);
                         output.println(secureMac);
@@ -123,9 +123,9 @@ public class ClientSocket {
                     }
 
                     String nonce  =  input.readLine();
-                    Map<String,String> secureTransaction = secureTransaction(nonce, newUserName + newPassword);
-                    String encodedKey = secureTransaction.get("EncodedKey");
-                    String secureMac = secureTransaction.get("SecureMac");
+                    Map<String,String> secureMessage = secureMessage(nonce, newUserName + newPassword);
+                    String encodedKey = secureMessage.get("EncodedKey");
+                    String secureMac = secureMessage.get("SecureMac");
 
                     output.println(encodedKey);
                     output.println(secureMac);
@@ -159,28 +159,28 @@ public class ClientSocket {
         while (true) {
             // read and display authenticated user menu options from server
 
-            String transactionNumber = input.readLine();
-            String transactionNumberMessage = "You sent " + transactionNumber + " transactions.";
+            String messageNumber = input.readLine();
+            String messageNumberMessage = "You sent " + messageNumber + " messages.";
 
-            String menu = welcome + "\n" + transactionNumberMessage + "\n" +  "Select an option";
-            int option = JOptionPane.showOptionDialog(null, menu, "Select an option", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] { "Perform a Transaction", "Logout" },null);
+            String menu = welcome + "\n" + messageNumberMessage + "\n" +  "Select an option";
+            int option = JOptionPane.showOptionDialog(null, menu, "Select an option", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, new String[] { "Perform a Message", "Logout" },null);
 
             // send selected option to server
             output.println(option);
 
             if (option == 0) {
-                // Handle transaction
-                String transaction = JOptionPane.showInputDialog("Enter transaction in format 'Cuenta origen, Cuenta destino, Cantidad transferida':");
-                output.println(transaction);
-                if (transaction == null) {
+                // Handle message
+                String message = JOptionPane.showInputDialog("Enter message in format 'Cuenta origen, Cuenta destino, Cantidad transferida':");
+                output.println(message);
+                if (message == null) {
                     continue;
                 }
                 String nonce  =  input.readLine();
 
                 // read response from server
-                Map<String,String> secureTransaction = secureTransaction(nonce, transaction);
-                String encodedKey = secureTransaction.get("EncodedKey");
-                String secureMac = secureTransaction.get("SecureMac");
+                Map<String,String> secureMessage = secureMessage(nonce, message);
+                String encodedKey = secureMessage.get("EncodedKey");
+                String secureMac = secureMessage.get("SecureMac");
 
                 output.println(encodedKey);
                 output.println(secureMac);
@@ -199,7 +199,7 @@ public class ClientSocket {
         }
     }
 
-    protected static Map<String,String> secureTransaction(String nonce, String data) throws Exception{
+    protected static Map<String,String> secureMessage(String nonce, String data) throws Exception{
         KeyGenerator keyGenerator = KeyGenerator.getInstance(HMAC_SHA512);
         SecretKey key = keyGenerator.generateKey();
         String encodedKey = Base64.getEncoder().encodeToString(key.getEncoded());

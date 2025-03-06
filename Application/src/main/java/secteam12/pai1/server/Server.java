@@ -14,9 +14,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import secteam12.pai1.model.Transaction;
+import secteam12.pai1.model.Message;
 import secteam12.pai1.model.User;
-import secteam12.pai1.repository.TransactionRepository;
+import secteam12.pai1.repository.MessageRepository;
 import secteam12.pai1.repository.UserRepository;
 
 import de.mkammerer.argon2.Argon2;
@@ -34,7 +34,7 @@ public class Server implements CommandLineRunner {
     UserRepository userRepository;
 
     @Autowired
-    TransactionRepository transactionRepository;
+    MessageRepository messageRepository;
 
     @Value("classpath:userserver_keystore.p12")
     private Resource keyStoreResource;
@@ -160,14 +160,14 @@ public class Server implements CommandLineRunner {
 
     public void handleAuthenticatedUser(BufferedReader input, PrintWriter output, User user) throws Exception {
         while (true) {
-            String transactionsNumber = userRepository.findUserTransactionLenghtByUserId(user.getId()).toString();
-            output.println(transactionsNumber);
+            String messagesNumber = userRepository.findUserMessageLenghtByUserId(user.getId()).toString();
+            output.println(messagesNumber);
             String option = input.readLine();
     
             if ("0".equals(option)) {
-                String transaction = input.readLine();
+                String message = input.readLine();
 
-                if (transaction.equals("null")) {
+                if (message.equals("null")) {
                     continue;
                 }
 
@@ -179,27 +179,27 @@ public class Server implements CommandLineRunner {
                 SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
                 String receivedMAC = input.readLine();
 
-                if (MACUtil.verifyMAC(transaction, nonce, key, receivedMAC)) {
-                    String[] parts = transaction.split(",");
+                if (MACUtil.verifyMAC(message, nonce, key, receivedMAC)) {
+                    String[] parts = message.split(",");
 
                     if (parts.length != 3) {
-                        output.println("Invalid transaction format.");
+                        output.println("Invalid message format.");
                         continue;
                     }
                     
 
-                    Transaction newTransaction = new Transaction();
-                    newTransaction.setSourceAccount(parts[0]);
-                    newTransaction.setDestinationAccount(parts[1]);
-                    newTransaction.setAmount(Double.parseDouble(parts[2]));
-                    newTransaction.setUser(user);
+                    Message newMessage = new Message();
+                    newMessage.setSourceAccount(parts[0]);
+                    newMessage.setDestinationAccount(parts[1]);
+                    newMessage.setAmount(Double.parseDouble(parts[2]));
+                    newMessage.setUser(user);
 
                     
-                    transactionRepository.save(newTransaction);
-                    output.println("Transaction received: " + transaction);
+                    messageRepository.save(newMessage);
+                    output.println("Message received: " + message);
     
                 } else {
-                    output.println("Invalid MAC. Transaction rejected.");
+                    output.println("Invalid MAC. Message rejected.");
                 }
                 
             } else if ("1".equals(option)) {

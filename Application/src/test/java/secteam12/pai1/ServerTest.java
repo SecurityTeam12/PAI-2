@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import de.mkammerer.argon2.Argon2;
 import de.mkammerer.argon2.Argon2Factory;
-import secteam12.pai1.model.Transaction;
+import secteam12.pai1.model.Message;
 import secteam12.pai1.model.User;
 import secteam12.pai1.repository.UserRepository;
 import java.net.Socket;
@@ -135,80 +135,80 @@ public class ServerTest extends Server{
         }
 
         @Test
-        public void testTransaction() throws Exception {
+        public void testMessage() throws Exception {
             Socket mockSocket = mock(Socket.class);
             BufferedReader mockInput = mock(BufferedReader.class);
         
-            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Transaction received\n".getBytes()));
+            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Message received\n".getBytes()));
             when(mockSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
         
-            when(mockInput.readLine()).thenReturn("Transaction received");
+            when(mockInput.readLine()).thenReturn("Message received");
 
-            String transaction = "sourceAccount,destinationAccount,100.0";
+            String message = "sourceAccount,destinationAccount,100.0";
             String nonce = MACUtil.generateNonce();
             String encodedKey = Base64.getEncoder().encodeToString(new byte[16]);
-            String receivedMAC = MACUtil.generateMAC(transaction, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
+            String receivedMAC = MACUtil.generateMAC(message, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
         
-            when(mockInput.readLine()).thenReturn(transaction, nonce, encodedKey, receivedMAC);
+            when(mockInput.readLine()).thenReturn(message, nonce, encodedKey, receivedMAC);
         
-            String[] parts = transaction.split(",");
-            assertEquals(3, parts.length, "Transaction format should be valid");
+            String[] parts = message.split(",");
+            assertEquals(3, parts.length, "Message format should be valid");
         
-            Transaction newTransaction = new Transaction();
-            newTransaction.setSourceAccount(parts[0]);
-            newTransaction.setDestinationAccount(parts[1]);
-            newTransaction.setAmount(Double.parseDouble(parts[2]));
+            Message newMessage = new Message();
+            newMessage.setSourceAccount(parts[0]);
+            newMessage.setDestinationAccount(parts[1]);
+            newMessage.setAmount(Double.parseDouble(parts[2]));
         
-            assertEquals("sourceAccount", newTransaction.getSourceAccount());
-            assertEquals("destinationAccount", newTransaction.getDestinationAccount());
-            assertEquals(100.0, newTransaction.getAmount());
+            assertEquals("sourceAccount", newMessage.getSourceAccount());
+            assertEquals("destinationAccount", newMessage.getDestinationAccount());
+            assertEquals(100.0, newMessage.getAmount());
         }
         
         @Test
-        public void testInvalidTransaction() throws Exception {
+        public void testInvalidMessage() throws Exception {
             Socket mockSocket = mock(Socket.class);
             BufferedReader mockInput = mock(BufferedReader.class);
         
-            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Invalid transaction format\n".getBytes()));
+            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Invalid message format\n".getBytes()));
             when(mockSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
         
-            when(mockInput.readLine()).thenReturn("Invalid transaction format");
+            when(mockInput.readLine()).thenReturn("Invalid message format");
         
-            String transaction = "sourceAccount,destinationAccount";
+            String message = "sourceAccount,destinationAccount";
             String nonce = MACUtil.generateNonce();
             String encodedKey = Base64.getEncoder().encodeToString(new byte[16]);
-            String receivedMAC = MACUtil.generateMAC(transaction, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
+            String receivedMAC = MACUtil.generateMAC(message, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
         
-            when(mockInput.readLine()).thenReturn(transaction, nonce, encodedKey, receivedMAC);
+            when(mockInput.readLine()).thenReturn(message, nonce, encodedKey, receivedMAC);
         
-            String[] parts = transaction.split(",");
-            assertNotEquals(3, parts.length, "Transaction format should be invalid");
+            String[] parts = message.split(",");
+            assertNotEquals(3, parts.length, "Message format should be invalid");
         }
 
         @Test
-        public void testTransactionMITMAttack() throws Exception {
+        public void testMessageMITMAttack() throws Exception {
             Socket mockSocket = mock(Socket.class);
             BufferedReader mockInput = mock(BufferedReader.class);
         
-            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Transaction received\n".getBytes()));
+            when(mockSocket.getInputStream()).thenReturn(new ByteArrayInputStream("Message received\n".getBytes()));
             when(mockSocket.getOutputStream()).thenReturn(new ByteArrayOutputStream());
         
-            when(mockInput.readLine()).thenReturn("Transaction received");
+            when(mockInput.readLine()).thenReturn("Message received");
         
-            String transaction = "sourceAccount,destinationAccount,100.0";
+            String message = "sourceAccount,destinationAccount,100.0";
             String nonce = MACUtil.generateNonce();
             String encodedKey = Base64.getEncoder().encodeToString(new byte[16]);
-            String receivedMAC = MACUtil.generateMAC(transaction, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
+            String receivedMAC = MACUtil.generateMAC(message, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
         
-            String modifiedTransaction = "sourceAccount,destinationAccount,100000.0";
-            String modifiedMAC = MACUtil.generateMAC(modifiedTransaction, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
+            String modifiedMessage = "sourceAccount,destinationAccount,100000.0";
+            String modifiedMAC = MACUtil.generateMAC(modifiedMessage, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"));
         
-            when(mockInput.readLine()).thenReturn(modifiedTransaction, nonce, encodedKey, modifiedMAC);
+            when(mockInput.readLine()).thenReturn(modifiedMessage, nonce, encodedKey, modifiedMAC);
         
-            String[] parts = modifiedTransaction.split(",");
-            assertEquals(3, parts.length, "Transaction format should be valid");
+            String[] parts = modifiedMessage.split(",");
+            assertEquals(3, parts.length, "Message format should be valid");
         
-            boolean isMACValid = MACUtil.verifyMAC(modifiedTransaction, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"), receivedMAC);
+            boolean isMACValid = MACUtil.verifyMAC(modifiedMessage, nonce, new SecretKeySpec(new byte[16], "HmacSHA512"), receivedMAC);
             assertFalse(isMACValid, "MAC should be invalid due to Man in the Middle attack");
         }
 

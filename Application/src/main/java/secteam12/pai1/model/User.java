@@ -26,7 +26,7 @@ public class User {
     private String hash;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Transaction> transactions;
+    private List<Message> messages;
 
 
     @Override

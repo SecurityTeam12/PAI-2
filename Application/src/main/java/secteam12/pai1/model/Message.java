@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-public class Transaction {
+public class Message {
     @Id
     @SequenceGenerator(name = "entity_seq",
             sequenceName = "entity_sequence",
@@ -35,7 +35,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return "Transaction{" +
+        return "Message{" +
                 "id=" + id +
                 ", sourceAccount='" + sourceAccount + '\'' +
                 ", destinationAccount='" + destinationAccount + '\'' +
