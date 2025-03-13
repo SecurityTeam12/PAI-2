@@ -23,8 +23,14 @@ public class SaltServer implements CommandLineRunner {
     @Autowired
     private SaltRepository saltRepository;
 
-    @Value("classpath:saltserver_keystore.p12")
+    @Value("classpath:saltserver_keystore.jks")
     private Resource keyStoreResource;
+
+    @Value("classpath:saltserver_truststore.jks")
+    private Resource trustStoreResource;
+
+    private static final char[] KEYSTORE_PASSWORD = "keystore".toCharArray();
+    private static final char[] TRUSTSTORE_PASSWORD = "keystore".toCharArray();
 
     @Override
     public void run(String... args) throws Exception {
@@ -32,22 +38,30 @@ public class SaltServer implements CommandLineRunner {
         SSLServerSocket serverSocket = null;
 
         try {
+            // Initialize SSL context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
 
-            // Initializing the server socket with SSL/TLS
-            char[] keystorePassword = "keystore".toCharArray();
-
+            // Initialize key manager factory
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
             KeyStore keyStore = KeyStore.getInstance("JKS");
-            try (FileInputStream keyStoreFile = new FileInputStream(keyStoreResource.getFile())) {
-                keyStore.load(keyStoreFile, "keystore".toCharArray());
+            try (FileInputStream keyStoreFileInputStream = new FileInputStream(keyStoreResource.getFile())) {
+                keyStore.load(keyStoreFileInputStream, KEYSTORE_PASSWORD);
+                keyManagerFactory.init(keyStore, KEYSTORE_PASSWORD);
             }
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(keyStore, keystorePassword);
 
-            SSLContext sc = SSLContext.getInstance("TLS");
-            sc.init(kmf.getKeyManagers(), null, new SecureRandom());
+            // Initialize trust manager factory
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            try (FileInputStream trustStoreFileInputStream = new FileInputStream(trustStoreResource.getFile())) {
+                trustStore.load(trustStoreFileInputStream, TRUSTSTORE_PASSWORD);
+                trustManagerFactory.init(trustStore);
+            }
 
-            SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-            serverSocket = (SSLServerSocket) ssf.createServerSocket(3344);
+            // Creating an SSL server socket
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+            SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
+            serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(3344);
+            serverSocket.setNeedClientAuth(true);
 
             System.err.println("Salt Server started and waiting for connections...");
 
