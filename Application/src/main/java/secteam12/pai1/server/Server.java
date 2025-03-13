@@ -32,30 +32,40 @@ public class Server implements CommandLineRunner {
     @Autowired
     MessageRepository messageRepository;
 
-    @Value("classpath:userserver_keystore.p12")
-    private Resource keyStoreResource;
-
-    @Value("classpath:saltserver_truststore.p12")
-    public Resource trustStoreResource;
+    private static final String KEYSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_keystore.jks";
+    private static final String TRUSTSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_truststore.jks";
+    private static final char[] KEYSTORE_PASSWORD = "keystore".toCharArray();
+    private static final char[] TRUSTSTORE_PASSWORD = "keystore".toCharArray();
 
     @Override
     public void run(String... args) throws Exception {
         SSLServerSocket serverSocket = null;
+
         try{
-            char[] keystorePassword = "keystore".toCharArray();
+            // Initialize SSL context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
 
+            // Initialize key manager factory
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
             KeyStore keyStore = KeyStore.getInstance("JKS");
-            try (FileInputStream keyStoreFile = new FileInputStream(keyStoreResource.getFile())) {
-                keyStore.load(keyStoreFile, "keystore".toCharArray());
+            try (FileInputStream keyStoreFileInputStream = new FileInputStream(KEYSTORE_PATH)) {
+                keyStore.load(keyStoreFileInputStream, KEYSTORE_PASSWORD);
+                keyManagerFactory.init(keyStore, KEYSTORE_PASSWORD);
             }
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
-            kmf.init(keyStore, keystorePassword);
 
-            SSLContext sc = SSLContext.getInstance("TLS");
-            sc.init(kmf.getKeyManagers(), null, new SecureRandom());
+            // Initialize trust manager factory
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            try (FileInputStream trustStoreFileInputStream = new FileInputStream(TRUSTSTORE_PATH)) {
+                trustStore.load(trustStoreFileInputStream, TRUSTSTORE_PASSWORD);
+                trustManagerFactory.init(trustStore);
+            }
 
-            SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-            serverSocket = (SSLServerSocket) ssf.createServerSocket(3343);
+            // Creating an SSL server socket
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+            SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
+            serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(3343);
+            serverSocket.setNeedClientAuth(true);
 
             System.err.println("Server started and waiting for connections...");
             while (true) {
@@ -129,7 +139,7 @@ public class Server implements CommandLineRunner {
                             } else if (registerUser(newUserName, newPassword) == -1) {
                                 output.println("Registration failed. Username already exists.");
                             } else if (registerUser(newUserName, newPassword) == -2) {
-                                output.println("Registration failed. Server not available. Contact the bank if the issue persists.");
+                                output.println("Registration failed. Server not available. Contact the IT Team if the issue persists.");
                             }
                         }
                         
@@ -252,24 +262,29 @@ public class Server implements CommandLineRunner {
     }
     public String getSalt(int id) throws Exception {
         String salt = "";
-        if (trustStoreResource == null) {
-            throw new IllegalStateException("TrustStore resource is not initialized.");
-        }
-        try {
-            // Initializing an SSL/TLS connection in order to encrypt the communication
-            char[] truststorePassword = "keystore".toCharArray();
 
-            KeyStore trustStore = KeyStore.getInstance("JKS");
-            try (InputStream trustStoreIS = new FileInputStream(trustStoreResource.getFile())) {
-                trustStore.load(trustStoreIS, truststorePassword);
+        try {
+            // Initialize SSL context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+
+            // Initialize key manager factory
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            try (FileInputStream keyStoreInputStream = new FileInputStream(KEYSTORE_PATH)) {
+                keyStore.load(keyStoreInputStream, KEYSTORE_PASSWORD);
+                keyManagerFactory.init(keyStore, KEYSTORE_PASSWORD);
             }
 
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(trustStore);
+            // Initialize trust manager factory
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            try (InputStream trustStoreInputStream = new FileInputStream(TRUSTSTORE_PATH)) {
+                trustStore.load(trustStoreInputStream, TRUSTSTORE_PASSWORD);
+                trustManagerFactory.init(trustStore);
+            }
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, tmf.getTrustManagers(), null);
-
+            // Initialize SSL context with key and trust managers
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
             SSLSocketFactory factory = sslContext.getSocketFactory();
 
             while (true) {
@@ -302,20 +317,27 @@ public class Server implements CommandLineRunner {
 
     public boolean saveSalt(int userID, String salt) throws Exception {
         try {
-            // Initializing an SSL/TLS connection in order to encrypt the communication
-            char[] truststorePassword = "keystore".toCharArray();
+            // Initialize SSL context
+            SSLContext sslContext = SSLContext.getInstance("TLS");
 
-            KeyStore trustStore = KeyStore.getInstance("JKS");
-            try (InputStream trustStoreIS = new FileInputStream(trustStoreResource.getFile())) {
-                trustStore.load(trustStoreIS, truststorePassword);
+            // Initialize key manager factory
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+            try (FileInputStream keyStoreInputStream = new FileInputStream(KEYSTORE_PATH)) {
+                keyStore.load(keyStoreInputStream, KEYSTORE_PASSWORD);
+                keyManagerFactory.init(keyStore, KEYSTORE_PASSWORD);
             }
 
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            tmf.init(trustStore);
+            // Initialize trust manager factory
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            try (FileInputStream trustStoreFileInputStream = new FileInputStream(TRUSTSTORE_PATH)) {
+                trustStore.load(trustStoreFileInputStream, TRUSTSTORE_PASSWORD);
+                trustManagerFactory.init(trustStore);
+            }
 
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, tmf.getTrustManagers(), null);
-
+            // Initialize SSL context with key and trust managers
+            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
             SSLSocketFactory factory = sslContext.getSocketFactory();
 
             while (true) {

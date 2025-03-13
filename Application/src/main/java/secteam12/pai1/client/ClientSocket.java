@@ -4,12 +4,10 @@ import secteam12.pai1.utils.MACUtil;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.*;
 import java.io.*;
-import java.security.KeyStore;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.Base64;
 import java.util.Map;
 import javax.swing.JOptionPane;
@@ -17,23 +15,36 @@ import javax.swing.JOptionPane;
 public class ClientSocket {
     private static final String HMAC_SHA512 = "HmacSHA512";
 
+    private static final String KEYSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "client_keystore.jks";
+    private static final String TRUSTSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "client_truststore.jks";
+    private static final char[] KEYSTORE_PASSWORD = "keystore".toCharArray();
+    private static final char[] TRUSTSTORE_PASSWORD = "keystore".toCharArray();
+
     public static void main(String[] args) throws Exception{
+        // Initialize SSL context
+        SSLContext sslContext = SSLContext.getInstance("TLS");
 
-        // Initializing an SSL/TLS connection in order to encrypt the communication
-        char[] truststorePassword = "keystore".toCharArray();
-
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        String trustStorePath = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "client_truststore.p12";
-        try (InputStream trustStoreIS = new FileInputStream(trustStorePath)) {
-            trustStore.load(trustStoreIS, truststorePassword);
+        // Initialize key manager factory
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+        KeyStore keyStore = KeyStore.getInstance("JKS");
+        try (FileInputStream keyStoreInputStream = new FileInputStream(KEYSTORE_PATH)) {
+            keyStore.load(keyStoreInputStream, KEYSTORE_PASSWORD);
+            keyManagerFactory.init(keyStore, KEYSTORE_PASSWORD);
         }
 
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        tmf.init(trustStore);
+        // Initialize trust manager factory
+        char[] truststorePassword = "keystore".toCharArray();
+        String trustStorePath = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "client_truststore.jks";
 
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, tmf.getTrustManagers(), null);
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("SunX509");
+        KeyStore trustStore = KeyStore.getInstance("JKS");
+        try (InputStream trustStoreInputStream = new FileInputStream(TRUSTSTORE_PATH)) {
+            trustStore.load(trustStoreInputStream, TRUSTSTORE_PASSWORD);
+            trustManagerFactory.init(trustStore);
+        }
 
+        // Initialize SSL context with key and trust managers
+        sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
         SSLSocketFactory factory = sslContext.getSocketFactory();
 
         try {
