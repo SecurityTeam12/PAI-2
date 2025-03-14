@@ -61,7 +61,7 @@ public class Server implements CommandLineRunner {
             while (true) {
                 try {
                     SSLSocket socket = (SSLSocket) serverSocket.accept();
-                    System.err.println("Client connected.");
+                    System.err.println("Client connected." + socket.getRemoteSocketAddress());
 
                     BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     PrintWriter output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
