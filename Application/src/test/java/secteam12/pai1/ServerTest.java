@@ -44,7 +44,7 @@ public class ServerTest extends Server{
         MockitoAnnotations.openMocks(this);
         // Ensure the trustStoreResource is properly initialized
         trustStoreResource = new ClassPathResource("saltserver_truststore.p12");
-        server.trustStoreResource = trustStoreResource;
+
 
         // Ensure the server is running before tests
         Thread serverThread = new Thread(() -> {

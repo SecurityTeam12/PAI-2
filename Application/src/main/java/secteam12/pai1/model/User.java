@@ -28,13 +28,23 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Message> messages;
 
+    public User() {
+        // Default constructor
+    }
+    
+    public User(String username, String hash) {
+        this.username = username;
+        this.hash = hash;
+    }
+
 
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", hash='" + hash + '\'' +
-                '}';
+            "id=" + id +
+            ", username='" + username + '\'' +
+            ", hash='" + hash + '\'' +
+            ", messages=" + messages +
+            '}';
     }
 }

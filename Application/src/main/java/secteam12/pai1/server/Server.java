@@ -32,8 +32,8 @@ public class Server implements CommandLineRunner {
     @Autowired
     MessageRepository messageRepository;
 
-    private static final String KEYSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_keystore.jks";
-    private static final String TRUSTSTORE_PATH = "Application" + File.separator + "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_truststore.jks";
+    private static final String KEYSTORE_PATH = "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_keystore.jks";
+    private static final String TRUSTSTORE_PATH =  "src" + File.separator + "main" + File.separator + "resources" + File.separator + "userserver_truststore.jks";
     private static final char[] KEYSTORE_PASSWORD = "keystore".toCharArray();
     private static final char[] TRUSTSTORE_PASSWORD = "keystore".toCharArray();
 
