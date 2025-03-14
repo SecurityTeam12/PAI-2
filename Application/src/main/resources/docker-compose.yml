@@ -1,0 +1,47 @@
+#NGINX puede funcionar como reverse proxy, todas las llamadas a las APIS pasan por el reverse proxy que redirecciona la llamada al servicio indicado.
+#Si la URL en cambio contiene en el path /api/db/ nginx redirecciona la llamada al db-service que es el servicio que controla la informacion de la base de datos
+#De la misma manera si contiene /api/salt-server/ o /api/server/ las llamadas seran direccionadas al servicio oportuno.
+
+#1. Crear servicio en docker-compose. 
+#2. Crear un volumen del archivo nginx.conf donde se encuentra laconfiguracion de nginx.
+
+version: '3.8'
+
+services:
+  reverse-proxy:
+    image: nginx:latest
+    container_name: reverse-proxy
+    depends_on:
+      - db-service
+      - salt-server
+      - server
+    ports:
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - app-network
+
+
+  db-service:
+    image: my-db-service-image
+    container_name: db-service
+    networks:
+      - app-network
+
+  salt-server:
+    image: my-salt-server-image
+    container_name: salt-server
+    networks:
+      - app-network
+
+  server:
+    image: my-server-image
+    container_name: server
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
