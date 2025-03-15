@@ -20,7 +20,7 @@ public class ConnectSimulator {
             executorService.submit(() -> {
                 try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT)) {
                     System.out.println("Conexión establecida: " + connectionId);
-                    Thread.sleep(10000);
+                    Thread.sleep(100000000);
                 } catch (IOException | InterruptedException e) {
                     System.err.println("Error en la conexión " + connectionId + ": " + e.getMessage());
                 }

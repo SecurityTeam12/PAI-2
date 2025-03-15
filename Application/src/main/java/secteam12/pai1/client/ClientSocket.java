@@ -171,7 +171,7 @@ public class ClientSocket {
 
             if (option == 0) {
                 // Handle message
-                String message = JOptionPane.showInputDialog("Enter message in format 'Cuenta origen, Cuenta destino, Cantidad transferida':");
+                String message = JOptionPane.showInputDialog("Enter message:");
                 output.println(message);
                 if (message == null) {
                     continue;

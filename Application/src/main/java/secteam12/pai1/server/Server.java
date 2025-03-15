@@ -4,6 +4,8 @@ import java.io.*;
 import java.security.*;
 import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -40,8 +42,9 @@ public class Server implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         SSLServerSocket serverSocket = null;
+        ExecutorService threadPool = Executors.newFixedThreadPool(50); // Pool de hilos con un tamaño fijo
 
-        try{
+        try {
             // Initialize SSL context
             SSLContext sslContext = SSLContext.getInstance("TLS");
 
@@ -71,97 +74,126 @@ public class Server implements CommandLineRunner {
             while (true) {
                 try {
                     SSLSocket socket = (SSLSocket) serverSocket.accept();
-                    System.err.println("Client connected." + socket.getRemoteSocketAddress());
+                    System.err.println("Client connected: " + socket.getRemoteSocketAddress());
 
-                    BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                    PrintWriter output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-
-                    String option = input.readLine();
-
-                    if ("0".equals(option)) {
-                        // Handle login
-
-                    for(int i = 0; i < 3;i ++){
-
-                        String nonce =  MACUtil.generateNonce();
-                        output.println(nonce);
-
-                        String encodedKey = input.readLine();
-                        byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
-                        SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
-                        String receivedMAC = input.readLine();
-
-                        String userName = input.readLine();
-                        if (userName == null) {
-                            break;
-                        }
-                        String password = input.readLine();
-                        if (password == null) {
-                            break;
-                        }
-
-
-                        if(MACUtil.verifyMAC(userName+password, nonce, key, receivedMAC)){
-                            User user = loginUser(userName, password);
-                            if (user == null) {
-                                output.println("Invalid login information");
-                            } else {
-                                output.println("Welcome, " + user.getUsername() + "!");
-                                handleAuthenticatedUser(input, output, user);
-                                break;
-                            }
-                        }
-                    }
-
-                } else if ("1".equals(option)) {
-                    // Handle registration
-                    String nonce =  MACUtil.generateNonce();
-                    output.println(nonce);
-
-                    String encodedKey = input.readLine();
-                    byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
-                    SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
-                    String receivedMAC = input.readLine();
-
-                    String newUserName = input.readLine();
-                    String newPassword = input.readLine();
-                    if(newPassword.equals("null") || newUserName.equals("null")){
-                        input.close();
-                        output.close();
-                        socket.close();
-                        System.err.println("Client disconnected.");
-                        continue;
-                    }
-
-                        if (MACUtil.verifyMAC(newUserName + newPassword, nonce, key, receivedMAC)) {
-                            if (registerUser(newUserName, newPassword) == 1) {
-                                output.println("Registration successful. You can now log in.");
-                            } else if (registerUser(newUserName, newPassword) == -1) {
-                                output.println("Registration failed. Username already exists.");
-                            } else if (registerUser(newUserName, newPassword) == -2) {
-                                output.println("Registration failed. Server not available. Contact the IT Team if the issue persists.");
-                            }
-                        }
-                        
-                    }
-
-                    input.close();
-                    output.close();
-                    socket.close();
-                    System.err.println("Client disconnected.");
-
+                    threadPool.submit(new ClientHandler(socket)); // Usar el pool de hilos para manejar la conexión
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             if (serverSocket != null) {
                 serverSocket.close();
             }
+            threadPool.shutdown(); // Cerrar el pool de hilos cuando el servidor se detenga
         }
-        
+    }
+
+    private class ClientHandler implements Runnable {
+        private SSLSocket socket;
+
+        public ClientHandler(SSLSocket socket) {
+            this.socket = socket;
+        }
+
+        @Override
+        public void run() {
+            try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                 PrintWriter output = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true)) {
+
+                String option;
+                while ((option = input.readLine()) != null) {
+                    if ("0".equals(option)) {
+                        // Handle login
+                        handleLogin(input, output);
+                    } else if ("1".equals(option)) {
+                        // Handle registration
+                        handleRegistration(input, output);
+                    } else {
+                        output.println("Invalid option selected.");
+                    }
+                }
+            }
+                catch (Exception e) {
+                    e.printStackTrace();
+            } finally {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.err.println("Client disconnected.");
+            }
+        }
+
+        private void handleLogin(BufferedReader input, PrintWriter output) throws Exception {
+            // Handle login
+
+            for(int i = 0; i < 3;i ++){
+
+                String nonce =  MACUtil.generateNonce();
+                output.println(nonce);
+
+                String encodedKey = input.readLine();
+                byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
+                SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
+                String receivedMAC = input.readLine();
+
+                String userName = input.readLine();
+                if (userName == null) {
+                    break;
+                }
+                String password = input.readLine();
+                if (password == null) {
+                    break;
+                }
+
+
+                if(MACUtil.verifyMAC(userName+password, nonce, key, receivedMAC)){
+                    User user = loginUser(userName, password);
+                    if (user == null) {
+                        output.println("Invalid login information");
+                    } else {
+                        output.println("Welcome, " + user.getUsername() + "!");
+                        handleAuthenticatedUser(input, output, user);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void handleRegistration(BufferedReader input, PrintWriter output) throws Exception {
+            // Handle registration
+            String nonce =  MACUtil.generateNonce();
+            output.println(nonce);
+
+            String encodedKey = input.readLine();
+            byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
+            SecretKey key = new SecretKeySpec(decodedKey, 0, decodedKey.length, "HmacSHA512");
+            String receivedMAC = input.readLine();
+
+            String newUserName = input.readLine();
+            String newPassword = input.readLine();
+            if(newPassword.equals("null") || newUserName.equals("null")){
+                input.close();
+                output.close();
+                socket.close();
+                System.err.println("Client disconnected.");
+                return;
+            }
+
+            if (MACUtil.verifyMAC(newUserName + newPassword, nonce, key, receivedMAC)) {
+                if (registerUser(newUserName, newPassword) == 1) {
+                    output.println("Registration successful. You can now log in.");
+                } else if (registerUser(newUserName, newPassword) == -1) {
+                    output.println("Registration failed. Username already exists.");
+                } else if (registerUser(newUserName, newPassword) == -2) {
+                    output.println("Registration failed. Server not available. Contact the IT Team if the issue persists.");
+                }
+            }
+        }
     }
 
     public void handleAuthenticatedUser(BufferedReader input, PrintWriter output, User user) throws Exception {

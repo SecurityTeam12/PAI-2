@@ -134,7 +134,7 @@ public class ServerTest extends Server{
         }
 
         @Test
-        public void testMessage() throws Exception {
+        public void testMessageTransation() throws Exception {
             Socket mockSocket = mock(Socket.class);
             BufferedReader mockInput = mock(BufferedReader.class);
         
